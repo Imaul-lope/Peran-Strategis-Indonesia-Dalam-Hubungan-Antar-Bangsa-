@@ -1,1 +1,196 @@
 # Peran-Strategis-Indonesia-Dalam-Hubungan-Antar-Bangsa-
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Diplomasi Indonesia</title>
+    <meta name="google-site-verification" content="sDC80Gym4HEBfYdD3KpOGHZ8Kt9tEoQFwkzTIYHXCyc" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        :root {
+            --primary-red: #b71c1c;
+            --dark-bg: #121212;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--dark-bg); color: white; }
+        #map { height: 100vh; width: 100%; z-index: 1; }
+
+        /* Judul Floating */
+        .header-title {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 25px;
+            border-radius: 30px;
+            border: 1px solid var(--primary-red);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        /* Modal / Jendela Penjelasan */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            color: #333;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close-btn {
+            position: sticky;
+            top: 0;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .content-body { line-height: 1.8; text-align: justify; }
+        .content-body h2 { color: var(--primary-red); margin-top: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header-title">
+        <h2 style="margin:0; font-size: 1.2rem;">Peran Strategis Indonesia dalam Hubungan Antar Bangsa</h2>
+        <small>Klik pada negara untuk melihat detail kontribusi Indonesia</small>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <div id="modalBody" class="content-body">
+                </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Inisialisasi Peta
+        const map = L.map('map').setView([0, 20], 2);
+
+        // Gaya Peta (CartoDB Dark Matter agar terlihat elegan)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+        // DATABASE PENJELASAN PANJANG
+        const dataPeran = {
+            "Indonesia": `
+                <h2>Indonesia: Pelopor Perdamaian</h2>
+                <p>Sebagai negara dengan politik luar negeri "Bebas Aktif", Indonesia memiliki peran sentral sebagai berikut:</p>
+                <ul>
+                    <li><b>Pemimpin ASEAN:</b> Indonesia adalah salah satu pendiri dan sering menjadi "kakak tertua" yang menengahi konflik di Asia Tenggara.</li>
+                    <li><b>G20 & Keketuaan Internasional:</b> Berhasil menyelenggarakan KTT G20 2022 yang fokus pada pemulihan ekonomi global pasca-pandemi.</li>
+                    <li><b>Misi Perdamaian PBB:</b> Indonesia secara konsisten menjadi salah satu kontributor pasukan perdamaian (Kontingen Garuda) terbesar di dunia.</li>
+                </ul>`,
+            
+            "Palestine": `
+                <h2>Hubungan Indonesia - Palestina</h2>
+                <p>Dukungan Indonesia terhadap Palestina bukan sekadar hubungan diplomatik, melainkan amanat konstitusi untuk menghapuskan penjajahan di atas dunia.</p>
+                <p>Peran nyata Indonesia meliputi:</p>
+                <ul>
+                    <li>Dukungan konsisten di forum PBB untuk pengakuan kedaulatan penuh Palestina.</li>
+                    <li>Pembangunan Rumah Sakit Indonesia di Gaza sebagai bantuan kemanusiaan berkelanjutan.</li>
+                    <li>Pemberian fasilitas bebas bea masuk untuk produk-produk Palestina ke pasar Indonesia untuk mendukung ekonomi mereka.</li>
+                </ul>`,
+
+            "United States of America": `
+                <h2>Hubungan Indonesia - Amerika Serikat</h2>
+                <p>Indonesia dan AS memiliki "Kemitraan Strategis" yang mendalam. Peran Indonesia meliputi:</p>
+                <p><b>Keamanan Kawasan:</b> Indonesia bekerja sama dengan AS dalam menjaga stabilitas di Indo-Pasifik tanpa memihak salah satu kekuatan besar.</p>
+                <p><b>Ekonomi:</b> Sebagai mitra dagang penting, Indonesia aktif dalam dialog perdagangan dan investasi untuk memperkuat ekonomi nasional.</p>`,
+
+            "South Africa": `
+                <h2>Hubungan Indonesia - Afrika Selatan</h2>
+                <p>Hubungan ini berakar kuat pada sejarah KAA (Konferensi Asia Afrika) 1955 di Bandung yang menginspirasi kemerdekaan banyak negara Afrika.</p>
+                <p>Saat ini, Indonesia berperan aktif dalam kemitraan strategis Asia-Afrika (NAASP) untuk memperkuat solidaritas sesama negara berkembang di bidang ekonomi dan teknik.</p>`
+        };
+
+        // Mengambil data batas negara (GeoJSON)
+        fetch('https://raw.githubusercontent.com/datasets/geo-boundaries-world-110m/master/countries.geojson')
+            .then(res => res.json())
+            .then(worldData => {
+                L.geoJSON(worldData, {
+                    style: {
+                        fillColor: '#444',
+                        weight: 1,
+                        color: '#666',
+                        fillOpacity: 0.5
+                    },
+                    onEachFeature: function(feature, layer) {
+                        layer.on({
+                            mouseover: (e) => {
+                                e.target.setStyle({ fillColor: '#b71c1c', fillOpacity: 0.8 });
+                            },
+                            mouseout: (e) => {
+                                e.target.setStyle({ fillColor: '#444', fillOpacity: 0.5 });
+                            },
+                            click: (e) => {
+                                openModal(feature.properties.name);
+                            }
+                        });
+                    }
+                }).addTo(map);
+            });
+
+        // Fungsi Modal
+        function openModal(countryName) {
+            const modal = document.getElementById('infoModal');
+            const body = document.getElementById('modalBody');
+            
+            // Cari data, jika tidak ada tampilkan default
+            const info = dataPeran[countryName] || `
+                <h2>${countryName}</h2>
+                <p>Indonesia menjalin hubungan diplomatik yang erat dengan ${countryName}. 
+                Kedua negara aktif bekerja sama dalam forum multilateral seperti PBB dan G77 
+                untuk menyuarakan kepentingan negara-negara berkembang serta memajukan 
+                agenda kerja sama ekonomi dan kemanusiaan global.</p>
+            `;
+            
+            body.innerHTML = info;
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('infoModal').style.display = "none";
+        }
+
+        // Klik di luar jendela untuk menutup
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('infoModal')) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
